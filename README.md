@@ -8,7 +8,7 @@ This repository contains all the visual assets for the **HABS** (Human Augmented
 
 <div align="center">
 
-![HABS Logo - Light Theme](./logo-light.png)
+![HABS Logo - Light Theme](./logo.png)
 
 *HABS Logo - Light Theme (Black on White)*
 
