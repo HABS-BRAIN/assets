@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Assets Gallery · habs-brain/assets</title>
+    <meta name="description" content="Browsable gallery of image assets for habs-brain/assets with full public URLs for GitHub Pages." />
+    <style>
+      :root {
+        --bg: #0b0d10;
+        --panel: #111418;
+        --muted: #98a2b3;
+        --text: #e5e7eb;
+        --accent: #6ea8fe;
+        --border: #1f2430;
+        --good: #22c55e;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        background: var(--bg);
+        color: var(--text);
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(6px);
+        background: color-mix(in oklab, var(--bg) 70%, transparent);
+        border-bottom: 1px solid var(--border);
+      }
+      .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
+      .title { display: flex; gap: 10px; align-items: center; }
+      .title img { width: 28px; height: 28px; }
+      .title h1 { font-size: 18px; margin: 0; font-weight: 600; }
+      .subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; }
+      .controls { display: flex; gap: 8px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+      .input {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        outline: none;
+        width: 280px;
+      }
+      .note { color: var(--muted); font-size: 12px; }
+
+      main { padding: 20px 0 40px; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 14px;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .thumb {
+        background: #0c0f14;
+        display: grid;
+        place-items: center;
+        border-bottom: 1px solid var(--border);
+        aspect-ratio: 16/10;
+      }
+      .thumb img {
+        max-width: 90%;
+        max-height: 70%;
+        object-fit: contain;
+        image-rendering: -webkit-optimize-contrast;
+      }
+      .meta { padding: 10px 12px; display: grid; gap: 8px; }
+      .name { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      code.url {
+        display: block;
+        background: #0a0d12;
+        border: 1px solid var(--border);
+        padding: 8px;
+        border-radius: 6px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 12px;
+        color: #cbd5e1;
+        overflow-x: auto;
+      }
+      .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+      .btn {
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: #0f1318;
+        color: var(--text);
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .btn:hover { border-color: #2a3242; }
+      .count { color: var(--muted); font-size: 12px; }
+      .footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: center; }
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <div class="title">
+          <img src="https://habs-brain.github.io/assets/logo.png" alt="logo" />
+          <h1>habs-brain/assets</h1>
+        </div>
+        <div class="subtitle">Public asset gallery. Base URL: <code>https://habs-brain.github.io/assets/</code></div>
+        <div class="controls">
+          <input class="input" id="q" type="search" placeholder="Filter by name or extension (e.g. svg, png)" />
+          <div class="count" id="count"></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div id="grid" class="grid" aria-live="polite"></div>
+      <div class="footer">
+        If images don't load, make sure GitHub Pages is enabled for this repo (Settings → Pages → Deploy from branch → main, /root).
+      </div>
+    </main>
+
+    <script>
+      const OWNER = 'habs-brain';
+      const REPO = 'assets';
+      const BRANCHES = ['main', 'master'];
+      const BASE = 'https://habs-brain.github.io/assets/';
+      const exts = new Set(['.png', '.jpg', '.jpeg', '.svg', '.gif', '.webp', '.avif']);
+
+      const fallbackFiles = [
+        'logo.png',
+        'logo_dark.png',
+        'logo_dark_horizontal.png',
+        'logo_dark_vertical.png',
+        'logo_grey.png',
+        'logo_grey_horizontal.png',
+        'logo_grey_vertical.png',
+        'logo_horizontal.png',
+        'logo_vertical.png',
+      ];
+
+      function hasImageExt(path) {
+        const i = path.lastIndexOf('.');
+        if (i < 0) return false;
+        return exts.has(path.slice(i).toLowerCase());
+      }
+
+      async function fetchTree(branch) {
+        const url = `https://api.github.com/repos/${OWNER}/${REPO}/git/trees/${branch}?recursive=1`;
+        const res = await fetch(url, { headers: { 'Accept': 'application/vnd.github+json' } });
+        if (!res.ok) throw new Error('fetch tree failed: ' + res.status);
+        return res.json();
+      }
+
+      async function getFiles() {
+        for (const b of BRANCHES) {
+          try {
+            const data = await fetchTree(b);
+            if (data && Array.isArray(data.tree)) {
+              return data.tree
+                .filter(n => n.type === 'blob')
+                .map(n => n.path)
+                .filter(hasImageExt)
+                .sort((a, b) => a.localeCompare(b));
+            }
+          } catch (_) {
+            // try next branch
+          }
+        }
+        return fallbackFiles;
+      }
+
+      function createCard(path) {
+        const url = BASE + encodeURI(path).replace(/%5C/g, '/');
+        const name = path.split('/').pop();
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="thumb">
+            <a href="${url}" target="_blank" rel="noopener noreferrer">
+              <img alt="${name}" loading="lazy" src="${url}" onerror="this.alt='(image failed to load)'; this.style.opacity=0.5;" />
+            </a>
+          </div>
+          <div class="meta">
+            <div class="row">
+              <div class="name" title="${path}">${name}</div>
+              <a class="btn" href="${url}" target="_blank" rel="noopener noreferrer">Open</a>
+            </div>
+            <code class="url">${url}</code>
+            <div class="row">
+              <button class="btn copy">Copy URL</button>
+              <span class="note">Use this URL in your apps or docs.</span>
+            </div>
+          </div>
+        `;
+        const copyBtn = card.querySelector('.copy');
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(url);
+            copyBtn.textContent = 'Copied!';
+            copyBtn.style.borderColor = 'color-mix(in oklab, var(--good) 70%, var(--border))';
+            setTimeout(() => { copyBtn.textContent = 'Copy URL'; copyBtn.style.borderColor = ''; }, 1200);
+          } catch (e) {
+            copyBtn.textContent = 'Copy failed';
+          }
+        });
+        return card;
+      }
+
+      function render(files) {
+        const grid = document.getElementById('grid');
+        const q = (document.getElementById('q').value || '').trim().toLowerCase();
+        const filtered = files.filter(p => p.toLowerCase().includes(q));
+        grid.innerHTML = '';
+        filtered.forEach(p => grid.appendChild(createCard(p)));
+        document.getElementById('count').textContent = `${filtered.length} / ${files.length} assets`;
+      }
+
+      (async function init() {
+        const files = await getFiles();
+        window.__FILES__ = files;
+        render(files);
+        document.getElementById('q').addEventListener('input', () => render(files));
+      })();
+    </script>
+  </body>
+</html>
