@@ -49,22 +49,6 @@ This repository contains all the visual assets for the **HABS** (Human Augmented
 
 </details>
 
-## Complete Asset Inventory
-
-| Asset Type | Filename | Description | Format | Dimensions |
-|------------|----------|-------------|---------|------------|
-| **Primary Logo** | `logo-light.png` | Main HABS logo - light theme | PNG | 800x400 |
-| **Primary Logo** | `logo-dark.png` | Main HABS logo - dark theme | PNG | 800x400 |
-| **Vertical Layout** | `logo-vertical-light.png` | Vertical stacked logo - light theme | PNG | 400x600 |
-| **Vertical Layout** | `logo-vertical-dark.png` | Vertical stacked logo - dark theme | PNG | 400x600 |
-| **Horizontal Layout** | `logo-horizontal-light.png` | Horizontal logo - light theme | PNG | 1000x300 |
-| **Horizontal Layout** | `logo-horizontal-dark.png` | Horizontal logo - dark theme | PNG | 1000x300 |
-| **Square Format** | `logo-square.png` | Square logo variant | PNG | 400x400 |
-| **Icon Format** | `logo-icon.png` | Icon-sized logo | PNG | 128x128 |
-| **SVG Version** | `logo.svg` | Vector logo format | SVG | Scalable |
-| **Favicon** | `favicon.ico` | Website favicon | ICO | 32x32 |
-| **Social Media** | `habs-social-card.png` | Social media preview image | PNG | 1200x630 |
-
 ## Logo Specifications
 
 ### Design Elements
